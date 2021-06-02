@@ -1,0 +1,152 @@
+ activeOnloadInterval();
+            //Logout User
+            $("#LogoutUser").click(function () {
+                logoutsession();
+            });
+            //Active Button
+            $("#Active").click(function () {
+                activeOnloadInterval();
+            });
+            //Onload Interval
+            $(document).click(function () {
+               // activeOnloadInterval();
+            });
+        });
+
+
+
+
+     //Ideal Timeout Functionality
+
+        function activeOnloadInterval() {
+            idleRemainingTime = 0;
+            clearInterval(logoutInterval);
+            logoutInterval = undefined;
+            clearInterval(showLogoutTimeInterval);
+            showLogoutTimeInterval = undefined;
+
+            $("#modelId").modal("hide");
+            showLogoutTimeInterval = setInterval(function (id) {
+                if (idleRemainingTime == idleTime) {
+                    showWarningModal();                  
+
+                }
+                else {
+                    idleRemainingTime++;
+                    if (idleRemainingTime == idleTime) {
+                        showWarningModal();                       
+                    }
+                }
+            }, 60000, (0));
+
+            //making a mock call to server so that cookie time on server would also update as well,
+            $.ajax({
+                type: "POST",
+                url: "<%=ResolveUrl("~/OutreachAgent.aspx/refreshSessionTime")%>",
+                data: {},
+                contentType: "application/json; charset=utf-8",
+                dataType: 'json',
+                success: function (res) {
+                    if (res == true) {
+                    } 
+                },
+                error: function (xhr, status, error) {
+                    alert(error);                    
+                }
+            });
+        }
+
+        function showWarningModal() {
+            let mint = 1;
+            let scnds = 10;
+
+            clearInterval(showLogoutTimeInterval)
+
+            $("#modelId").modal({
+                backdrop: 'static',
+                keyboard: false
+            });
+
+            logoutInterval = setInterval(function (id) {
+                console.log(id)
+
+                if (scnds == 0) {
+                    if (mint == 0) {
+
+                        if (scnds == 0) {
+                            logoutsession();
+                            $("#modelId").modal('hide');
+                        }
+                        $("#sessionTime").html((scnds < 10 ? '0' : '') + scnds + "<span style='font-size: 15px'>sec</span>");
+
+                    } else {
+                        --mint;
+                        scnds = 60;
+                        $("#sessionTime").html((mint < 10 ? '0' : '') + mint + "<span style='font-size: 15px'>min</span>" + (scnds < 10 ? '0' : '') + scnds + "<span style='font-size: 15px'>sec</span>");
+                    }
+                } else {
+                    --scnds;
+                    $("#sessionTime").html((mint < 10 ? '0' : '') + mint + "<span style='font-size: 15px'>min</span>" + (scnds < 10 ? '0' : '') + scnds + "<span style='font-size: 15px'>sec</span>");
+                }
+            }, 1000, (1));
+        }
+
+        function logoutsession() {
+            $.ajax({
+                type: "POST",
+                url: "<%= ResolveUrl("~/OutreachAgent.aspx/AutoLogout") %>",
+                data: {},
+                contentType: "application/json; charset=utf-8",
+                dataType: "json",
+                success: function (res) {
+                    if (res.d == "True") {                      
+                        window.location = "<%= ResolveUrl("~/Login.aspx")%>"
+                    }
+                },
+                error: function (xhr, status, error) {
+                    alert(error);
+                }
+            });
+        }
+
+
+
+
+
+
+
+html
+
+
+
+            <div class="modal fade" id="modelId" tabindex="-1" role="dialog" aria-labelledby="modelTitleId" aria-hidden="true">
+                <div class="modal-dialog" role="document">
+                    <div class="modal-content" style="border: 2px solid #26b8d4;">
+                        <div class="modal-header" style="border: none;">
+                            <p class="modal-title"></p>
+                            <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+                                <span aria-hidden="true">&times;</span>
+                            </button>
+                        </div>
+                        <div class="modal-body">
+                            <div class="text-center">
+                                <img class="img-fluid" src="images/download.png" alt="" style="height: 140px" />
+                            </div>
+
+                            <div class="text-center">
+                                <h3>Are You Still There?</h3>
+                                <p>Your session will be time out in:</p>
+                            </div>
+                            <div class="text-center">
+                                <h1 id="sessionTime"></h1>
+                            </div>
+                        </div>
+                        <div class="modal-footer d-flex justify-content-center" style="border: none;">
+                            <input id="Active" type="button" value="I'm still here" class="btn btn-danger" data-dismiss="modal" />
+                            <input id="LogoutUser" type="button" value="Logout" class="btn btn-info" />
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </div>
